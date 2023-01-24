@@ -55,6 +55,10 @@ Resources:
           FromPort: 22
           ToPort: 22
           CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
       SecurityGroupEgress:
         - IpProtocol: tcp
           FromPort: 80
@@ -126,4 +130,11 @@ Resources:
           #!/bin/bash -xe
           yum -y update
           /opt/aws/bin/cfn-init -v --stack ${AWS::StackId} --resource ApiServer --configsets ec2_bootstrap --region ${AWS::Region}
+
+          git clone https://github.com/karma-aws-samples/web-api-on-ec2.git
+
+          cd web-api-on-ec2/aws-webapi-sample
+          docker build -t aspnetcorewebapiimage -f Dockerfile .
+          docker run -d -p 80:80 --name aspnetcorewebapicontainer aspnetcorewebapiimage
+
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource ApiServer --region ${AWS::Region}
