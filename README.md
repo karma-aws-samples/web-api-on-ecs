@@ -1,5 +1,5 @@
-# web-api-on-ec2
+# web-api-on-ecs
 
-This sample project shows how to run the .net web api on EC2 instance using the Cloudformation cfn-init. 
+This sample project shows how to run the .net web api on ECS using github actions.
 
 Note: This is only for learning purposes and understanding. 
