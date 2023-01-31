@@ -17,6 +17,7 @@ Resources:
   Role:
     Type: AWS::IAM::Role
     Properties:
+      RoleName: OpenIdConnectRoleForGithub
       AssumeRolePolicyDocument:
         Statement:
           - Effect: Allow
@@ -29,6 +30,24 @@ Resources:
             Condition:
               StringLike:
                 token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${RepositoryName}:*
+      Policies:
+        - PolicyName: 'OpenIdConnectRoleForGithub-policy'
+          PolicyDocument: 
+            Statement:
+            - Effect: Allow
+              Action:
+                - 'ecr:GetAuthorizationToken'
+              Resource: '*'
+            - Effect: Allow
+              Action:
+                - 'ecr:BatchGetImage'
+                - "ecr:PutImage"
+                - "ecr:InitiateLayerUpload"
+                - "ecr:BatchCheckLayerAvailability"
+                - "ecr:GetDownloadUrlForLayer"
+                - "ecr:UploadLayerPart"
+              Resource:
+                - !Sub 'arn:${AWS::Partition}:ecr:*:${AWS::AccountId}:*'
 
   GithubOidc:
     Type: AWS::IAM::OIDCProvider
