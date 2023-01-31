@@ -62,7 +62,7 @@ jobs:
         name: Download artifact
         uses: actions/download-artifact@v3
         with:
-          name: web-api-image-test
+          name: web-api-image
           path: /tmp
       -
         name: Load image
