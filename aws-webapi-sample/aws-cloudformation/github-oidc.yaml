@@ -33,6 +33,7 @@ Resources:
       Policies:
         - PolicyName: 'OpenIdConnectRoleForGithub-policy'
           PolicyDocument: 
+            Version: 2012-10-17
             Statement:
             - Effect: Allow
               Action:
@@ -46,6 +47,7 @@ Resources:
                 - "ecr:BatchCheckLayerAvailability"
                 - "ecr:GetDownloadUrlForLayer"
                 - "ecr:UploadLayerPart"
+                - 'ecr:CompleteLayerUpload'
               Resource:
                 - !Sub 'arn:${AWS::Partition}:ecr:*:${AWS::AccountId}:*'
 
