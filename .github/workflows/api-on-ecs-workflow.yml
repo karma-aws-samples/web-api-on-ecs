@@ -6,13 +6,13 @@ on:
       - main
 
 env:
-  AWS_REGION: AWS_REGION
-  ECR_REPOSITORY: MY_ECR_REPOSITORY
-  ECS_SERVICE: MY_ECS_SERVICE
-  ECS_CLUSTER: MY_ECS_CLUSTER
-  ECS_TASK_DEFINITION: MY_ECS_TASK_DEFINITION
+  AWS_REGION: MY_AWS_REGION
+  # ECR_REPOSITORY: MY_ECR_REPOSITORY
+  # ECS_SERVICE: MY_ECS_SERVICE
+  # ECS_CLUSTER: MY_ECS_CLUSTER
+  # ECS_TASK_DEFINITION: MY_ECS_TASK_DEFINITION
 
-  CONTAINER_NAME: MY_CONTAINER_NAME
+  # CONTAINER_NAME: MY_CONTAINER_NAME
 
 jobs:
   build:
@@ -37,7 +37,7 @@ jobs:
   cloudformation:
     runs-on: ubuntu-latest
     needs: build
-    environment: Test
+    environment: test
     steps:
       -
         name: Configure aws credentials
