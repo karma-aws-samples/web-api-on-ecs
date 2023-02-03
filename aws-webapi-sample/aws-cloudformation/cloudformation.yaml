@@ -149,11 +149,13 @@ Resources:
     DependsOn: ECSCluster
     Type: AWS::AutoScaling::AutoScalingGroup
     Properties:
-      VPCZoneIdentifier: !Ref PublicSubnet
+      VPCZoneIdentifier: 
+        - !Ref PublicSubnet
+        - !Ref PublicSubnet2
       LaunchConfigurationName: !Ref ECSLaunchConfiguration
-      MinSize: 1
+      MinSize: 4
       MaxSize: 4
-      DesiredCapacity: 1
+      DesiredCapacity: 4
       Tags:
         - Key: Name
           Value: !Sub ${EnvironmentName} ECS host
@@ -181,13 +183,55 @@ Resources:
       SecurityGroups:
         - !Ref ECSHostSecurityGroup
       IamInstanceProfile: !Ref ECSInstanceProfile
+      UserData:
+        "Fn::Base64": !Sub |
+          #!/bin/bash
+          yum install -y https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_amd64/amazon-ssm-agent.rpm
+          yum install -y https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
+          yum install -y aws-cfn-bootstrap hibagent 
+          /opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+          /opt/aws/bin/cfn-signal -e $? --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSAutoScalingGroup
+          /usr/bin/enable-ec2-spot-hibernation
+    Metadata:
+      AWS::CloudFormation::Init:
+        config:
+          packages:
+            yum:
+              collectd: []
+
+          commands:
+            01_add_instance_to_cluster:
+              command: !Sub echo ECS_CLUSTER=${ECSCluster} >> /etc/ecs/ecs.config
+          files:
+            /etc/cfn/cfn-hup.conf:
+              mode: 000400
+              owner: root
+              group: root
+              content: !Sub |
+                [main]
+                stack=${AWS::StackId}
+                region=${AWS::Region}
+            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
+              content: !Sub |
+                [cfn-auto-reloader-hook]
+                triggers=post.update
+                path=Resources.ECSLaunchConfiguration.Metadata.AWS::CloudFormation::Init
+                action=/opt/aws/bin/cfn-init -v --region ${AWS::Region} --stack ${AWS::StackName} --resource ECSLaunchConfiguration
+        services:
+            sysvinit:
+              cfn-hup:
+                enabled: true
+                ensureRunning: true
+                files:
+                  - /etc/cfn/cfn-hup.conf
+                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
   Service:
     Type: AWS::ECS::Service
     DependsOn: ListenerRule
     Properties:
       Cluster: !Ref ECSCluster
       Role: !Ref ServiceRole
-      DesiredCount: 1
+      DesiredCount: 2
       TaskDefinition: !Ref TaskDefinition
       LoadBalancers:
         - ContainerName: "web-api"
@@ -226,7 +270,7 @@ Resources:
       Matcher:
         HttpCode: 200-299
       HealthCheckIntervalSeconds: 10
-      HealthCheckPath: /products
+      HealthCheckPath: /GetWeatherForecast
       HealthCheckProtocol: HTTP
       HealthCheckTimeoutSeconds: 5
       HealthyThresholdCount: 2
